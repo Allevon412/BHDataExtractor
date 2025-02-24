@@ -1,0 +1,64 @@
+{
+  "cyphers": [
+    {
+      "name": "ADCS ESC1",
+      "cypher": "MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(:EnterpriseCA) WHERE ct.enrolleesuppliessubject = True AND ct.authenticationenabled = True AND ct.requiresmanagerapproval = False AND (ct.authorizedsignatures = 0 OR ct.schemaversion = 1) RETURN p LIMIT 1000"
+    },
+    {
+      "name": "ADCS ESC2",
+      "cypher": "MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(c:CertTemplate)-[:PublishedTo]->(:EnterpriseCA) WHERE c.requiresmanagerapproval = false AND (c.effectiveekus = [''] OR '2.5.29.37.0' IN c.effectiveekus) AND (c.authorizedsignatures = 0 OR c.schemaversion = 1) RETURN p LIMIT 1000"
+    },
+    {
+      "name": "Kerberoastable users",
+      "cypher": "MATCH (u:User) WHERE u.hasspn=true AND u.enabled = true AND NOT u.objectid ENDS WITH '-502' AND NOT COALESCE(u.gmsa, false) = true AND NOT COALESCE(u.msa, false) = true RETURN u"
+    },
+    {
+      "name": "SPNs with Special Privileges",
+        "cypher": "MATCH (c {hasspn: True}) RETURN c.name as name, c.allowedtodelegate as AllowedToDelegate, c.unconstraineddelegation as UnconstrainedDelegation, c.admincount as AdminCount, c.serviceprincipalnames as SPNs"
+    },
+    {
+      "name": "AS-REP Roastable users",
+      "cypher": "MATCH (u:User) WHERE u.dontreqpreauth = true AND u.enabled = true RETURN u"
+    },
+    {
+      "name": "High Value principals AS-REP Roastable users",
+        "cypher": "MATCH (u:User) WHERE u.dontreqpreauth = true AND u.enabled = true AND COALESCE(u.system_tags, '') CONTAINS 'admin_tier_0' RETURN u"
+    },
+    {
+      "name": "Disabled Tier Zero High Value principals",
+      "cypher":  "MATCH (n:Base) WHERE COALESCE(n.system_tags, '') CONTAINS 'admin_tier_0' AND n.enabled = false AND NOT n.objectid ENDS WITH '-502' AND NOT n.objectid ENDS WITH '-500' RETURN n"
+    },
+    {
+      "name": "Tier Zero High Value users with non-expiring passwords",
+      "cypher": "MATCH (u:User) WHERE u.enabled = true AND u.pwdneverexpires = true and COALESCE(u.system_tags, '') CONTAINS 'admin_tier_0' RETURN u"
+    },
+    {
+      "name": "Enabled Users w Passwrd not rotated in 365 days",
+      "cypher": "WITH 365 as days_since_change MATCH (u:User) WHERE u.pwdlastset < (datetime().epochseconds - (days_since_change * 86400)) AND NOT u.pwdlastset IN [-1.0, 0.0] AND u.enabled RETURN u"
+    },
+    {
+      "name": "Users which do not require password to authenticate",
+      "cypher": "MATCH (u:User) WHERE u.passwordnotreqd = true RETURN u"
+    },
+    {
+      "name": "High Value principals which do not require password",
+      "cypher": "MATCH (u:User) WHERE u.passwordnotreqd = true and COALESCE(u.system_tags, '') CONTAINS 'admin_tier_0' RETURN u"
+    },
+    {
+      "name": "Enabled Tier Zero High Value principals inactive for 60 days",
+      "cypher": "WITH 60 as inactive_days MATCH (n:Base) WHERE COALESCE(n.system_tags, '') CONTAINS 'admin_tier_0' AND n.enabled = true AND n.lastlogontimestamp < (datetime().epochseconds - (inactive_days * 86400)) AND n.lastlogon < (datetime().epochseconds - (inactive_days * 86400)) AND n.whencreated < (datetime().epochseconds - (inactive_days * 86400)) AND NOT n.name STARTS WITH 'AZUREADKERBEROS.' AND NOT n.objectid ENDS WITH '-500'  AND NOT n.name STARTS WITH 'AZUREADSSOACC.' RETURN n"
+    },
+    {
+      "name": "Users with \"pass\" in their description",
+      "cypher": "MATCH (u:User) WHERE u.description =~ '(?i).*pass.*' RETURN u"
+    },
+    {
+      "name": "Computers with Unconstrained Delegation",
+      "cypher": "MATCH (c:Computer {unconstraineddelegation:true}) return c"
+    },
+    {
+      "name": "Principals with passwords stored using reversible encryption",
+      "cypher": "MATCH (n:Base) WHERE n.encryptedtextpwdallowed = true RETURN n"
+    }
+  ]
+}

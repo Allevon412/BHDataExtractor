@@ -1,0 +1,13 @@
+[    {
+      "name": "Nested groups within Tier Zero / High Value",
+      "cypher": "MATCH p=(s:Group)-[:MemberOf*..]->(t:Group) WHERE COALESCE(t.system_tags, '') CONTAINS 'admin_tier_0' AND NOT s.objectid ENDS WITH '-512' AND NOT s.objectid ENDS WITH '-519' RETURN p"
+    },
+    {
+      "name":"Find if unprivileged users have rights to add members into groups",
+      "cypher": "MATCH (n:User {admincount:False}) MATCH p=allShortestPaths((n)-[r:AddMember*1..]->(m:Group)) RETURN p"
+    },
+    {
+      "name": "Computers with Unsupported operating systems",
+      "cypher": "MATCH (c:Computer) WHERE c.operatingsystem =~ '(?i).*Windows.* (2000|2003|2008|2012|xp|vista|7|8|me|nt).*' RETURN c"
+    }
+]
